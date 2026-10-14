@@ -1,0 +1,14 @@
+# Maven
+/target/
+
+# IDE files
+.idea/
+*.iml
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Compiled Java output
+*.class
