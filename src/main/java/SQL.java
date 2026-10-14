@@ -4,6 +4,7 @@ import java.util.*;
 public class SQL {
     static user User;
     static Connection con;
+
     SQL() throws Exception {
         String dbUrl = System.getenv().getOrDefault(
                 "TRANSPORT_DB_URL", "jdbc:mysql://localhost:3306/city");
@@ -96,7 +97,9 @@ public class SQL {
     public static void addLine(String table, String[] columns, String[] values) throws Exception {
         StringBuilder cols = new StringBuilder(), placeholders = new StringBuilder();
         for (int i = 0; i < columns.length; i++) {
-            if (cols.length() > 0) { cols.append(","); placeholders.append(","); }
+            if (cols.length() > 0) {
+                cols.append(","); placeholders.append(",");
+            }
             cols.append("`").append(columns[i]).append("`");
             placeholders.append("?");
         }
@@ -108,12 +111,11 @@ public class SQL {
         pst.executeUpdate();
     }
 
-    public static void delLine(String table, String RouteID) throws Exception {
-        String sql = "DELETE FROM `" + table + "` WHERE `RouteID` = ?";
+    public static void delLine(String table, String column, String value) throws Exception {
+        String sql = "DELETE FROM `" + table + "` WHERE `" + column + "` = ?";
         PreparedStatement pst = con.prepareStatement(sql);
-        pst.setString(1, RouteID);
+        pst.setString(1, value);
         pst.executeUpdate();
     }
 
 }
-

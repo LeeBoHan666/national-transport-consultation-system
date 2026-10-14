@@ -1,7 +1,6 @@
 import javafx.animation.*;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.application.*;
+import javafx.geometry.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import java.util.*;
@@ -25,7 +24,7 @@ public class ChatPane extends VBox {
         setStyle("-fx-background-color: #f5f5f5;");
         setMaxWidth(Double.MAX_VALUE);
 
-        Label title = new Label("💬 AI 助手");
+        Label title = new Label("AI 助手");
         title.setStyle("-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         getChildren().add(title);
 
@@ -39,7 +38,7 @@ public class ChatPane extends VBox {
         HBox toggleRow = new HBox(10);
         toggleRow.setAlignment(Pos.CENTER_LEFT);
 
-        dbToggle = new ToggleButton("🗄 数据库");
+        dbToggle = new ToggleButton("数据库");
         dbToggle.setPrefSize(110, 32);
         dbToggle.setSelected(true);
         dbToggle.setStyle("-fx-background-color: #00adb5; -fx-text-fill: white; " +
@@ -51,7 +50,7 @@ public class ChatPane extends VBox {
                 "-fx-font-size: 13; -fx-font-weight: bold; -fx-background-radius: 16;");
         });
 
-        webToggle = new ToggleButton("🌐 联网搜索");
+        webToggle = new ToggleButton("联网搜索");
         webToggle.setPrefSize(120, 32);
         webToggle.setSelected(true);
         webToggle.setStyle("-fx-background-color: #00adb5; -fx-text-fill: white; " +
@@ -154,7 +153,7 @@ public class ChatPane extends VBox {
             // 联网搜索
             String webResult = "";
             if (doWeb) {
-                Platform.runLater(() -> botBubble.setText("🔍 联网搜索中..."));
+                Platform.runLater(() -> botBubble.setText("联网搜索中..."));
                 webResult = LLM.searchWeb(text + " 12306 火车票 时刻表");
             }
 
@@ -176,7 +175,8 @@ public class ChatPane extends VBox {
             }
             prompt.append("要求：逐条列出车次/航班号、出发到达时间、票价、耗时。")
                  .append("如果涉及换乘请说明换乘方案。")
-                 .append("必须给出具体可执行的方案。\n\n");
+                 .append("必须给出具体可执行的方案。\n\n")
+                    .append("请不要用表情符号输出，使用纯文本");
 
             if (!dbResult.isEmpty()) {
                 prompt.append("## 数据库匹配结果\n").append(dbResult).append("\n\n");
@@ -267,5 +267,3 @@ public class ChatPane extends VBox {
     }
 
     }
-
-

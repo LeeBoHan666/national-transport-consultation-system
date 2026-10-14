@@ -1,3 +1,7 @@
-# 地图资源
+# 地图与界面资源
 
-运行界面的地图模块需要 `icon/china.json`，格式为包含 `features`、`geometry.type` 和 `geometry.coordinates` 的 GeoJSON。项目压缩包中未包含该文件。补齐后请将它放在本目录，程序会从仓库工作目录下的 `icon/china.json` 读取。
+- `china.json`：绘制中国省级边界的 GeoJSON，运行程序时请从仓库根目录启动。
+- `*.png`：JavaFX 界面使用的图标。
+- `china_bg.svg`、`cn.svg`：随项目保留的矢量地图资源。
+
+课程演示数据见 `database/demo_data.sql`。

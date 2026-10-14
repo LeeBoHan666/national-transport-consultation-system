@@ -2,7 +2,7 @@
 
 ### Java + JavaFX 数据结构课程设计：城市交通网络建模与多目标路径规划
 
-![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)
+![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?logo=openjdk&logoColor=white)
 ![JavaFX](https://img.shields.io/badge/JavaFX-21-5382A1)
 ![Algorithms](https://img.shields.io/badge/算法-Dijkstra%20%7C%20Floyd-2F6F8F)
 
@@ -39,7 +39,7 @@
 
 ## 技术栈
 
-- Java 17
+- Java 21
 - JavaFX 21
 - MySQL 8+
 - Gson（解析地图 GeoJSON）
@@ -59,7 +59,11 @@ AI 面板中的“数据库”和“联网搜索”开关默认开启。数据�
 ```text
 .
 ├── database/
-│   └── schema.sql
+│   ├── schema.sql
+│   └── demo_data.sql
+├── icon/
+│   ├── china.json
+│   └── application icons
 ├── src/main/java/
 │   ├── ChatPane.java
 │   ├── DijRouteFinder.java
@@ -75,7 +79,7 @@ AI 面板中的“数据库”和“联网搜索”开关默认开启。数据�
 
 ### 1. 准备环境
 
-安装 JDK 17 或更高版本、Maven 3.8+ 和 MySQL 8 或更高版本。JavaFX、Gson 和 MySQL Connector/J 由 Maven 根据 `pom.xml` 下载。
+安装 JDK 21 或更高版本、Maven 3.8+ 和 MySQL 8 或更高版本。JavaFX、Gson 和 MySQL Connector/J 由 Maven 根据 `pom.xml` 下载。
 
 ### 2. 初始化数据库
 
@@ -83,9 +87,10 @@ AI 面板中的“数据库”和“联网搜索”开关默认开启。数据�
 
 ```sql
 SOURCE database/schema.sql;
+SOURCE database/demo_data.sql;
 ```
 
-项目原始资料没有附带数据库导出文件或线路样例数据。建表后，需要按 `schema.sql` 中的字段导入城市、路线记录；`city.RouteID` 由当前程序用逗号分隔的线路 ID 维护。
+`demo_data.sql` 导入 36 个城市和 308 条课程演示线路，并按程序要求生成每个城市关联的线路 ID。数据用于演示算法与界面，不是实时班次，使用前请自行核对。
 
 首次运行前，需在本地数据库创建至少一个账号。下面示例中的密码请只在本机替换，不要提交真实账号或密码：
 
@@ -124,6 +129,6 @@ mvn clean javafx:run
 
 ## 当前资料范围
 
-已从项目压缩包整理出 7 个 Java 源文件。资料包没有包含 MySQL 数据导出文件，也没有包含界面读取的 `icon/china.json` GeoJSON 文件；因此仓库提供建表脚本和运行说明，但地图底图及示例城市/线路数据需要另行补充。缺少该 GeoJSON 时，地图底图不会绘出。
+仓库现包含完整 Java 源码、地图 GeoJSON、界面图标、数据库结构和课程演示数据。原始课程说明书与答辩材料未纳入公开仓库。
 
 仓库未上传课程说明书、答辩材料或包含个人学号的文件。

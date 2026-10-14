@@ -1,31 +1,24 @@
 import com.google.gson.*;
 import javafx.application.*;
-import javafx.geometry.Pos;
+import javafx.geometry.*;
 import javafx.scene.*;
-import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.canvas.*;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.stage.*;
-import javafx.scene.paint.Color;
+import javafx.scene.paint.*;
 import java.util.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import javafx.geometry.Insets;
-import javafx.scene.canvas.Canvas;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import java.io.*;
+import java.nio.file.*;
+import javafx.collections.*;
 import javafx.scene.chart.*;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 import java.sql.*;
 
 
 public class GUI extends Application {
-    // 经纬度范围（和 cn.svg 的投影对齐）
+
+    // 经纬度范围
     static final double MIN_LON = 69.0;
     static final double MAX_LON = 138.0;
     static final double MIN_LAT = 17.5;
@@ -50,11 +43,11 @@ public class GUI extends Application {
         Scene MainScene = new Scene(MainPanel,1200,880);
 
         VBox MenuBox = new VBox(25);
-        Button MainButton = new Button("✈ 主界面");
-        Button ChatButton = new Button("💬 聊天");
-        Button SearchButton=new Button("🔍 检索");
-        Button SQLButton = new Button("🗄 数据库");
-        Button SetButton = new Button("⚙ 设置");
+        Button MainButton = new Button("主界面");
+        Button ChatButton = new Button("聊天");
+        Button SearchButton=new Button("检索");
+        Button SQLButton = new Button("数据库");
+        Button SetButton = new Button("设置");
 
         MainButton.setPrefSize(150,40);
         ChatButton.setPrefSize(150,40);
@@ -74,7 +67,7 @@ public class GUI extends Application {
 
         MenuBox.setStyle("-fx-background-color:  #222831 ;  ");
 
-        Label HelloLabel = new Label("\n🚆\n"+SQL.getUsername()+" , 您好\n ——————");
+        Label HelloLabel = new Label("\n"+SQL.getUsername()+" , 您好\n ——————");
         HelloLabel.setStyle("-fx-text-fill:white;-fx-font-size: 30;-fx-text-alignment: center;");
 
         if(SQL.getRole().equals("admin"))
@@ -183,7 +176,7 @@ public class GUI extends Application {
            getFromPopup.show(stage);
         });
 
-        Button SwapButton = new Button("🔀");
+        Button SwapButton = new Button("<->");
         SwapButton.setPrefSize(100,30);
         SwapButton.setStyle("-fx-background-color: white;-fx-border-radius: 6px;" +
                 "-fx-border-color: white;-fx-background-radius: 6px;-fx-font-size: 16;");
@@ -480,9 +473,9 @@ public class GUI extends Application {
         ResultBox.setMaxWidth(Double.MAX_VALUE);
         ResultBox.setPadding(new Insets(10, 2, 4, 2));
 
-        VBox cardTime = makeResultCard("⏱ 最短耗时",  "#00adb5", "—");
-        VBox cardPrice = makeResultCard("💰 最低价格",  "#e8a400", "—");
-        VBox cardTrans = makeResultCard("🔄 最少换乘",  "#4488cc", "—");
+        VBox cardTime = makeResultCard("最短耗时",  "#00adb5", "—");
+        VBox cardPrice = makeResultCard("最低价格",  "#e8a400", "—");
+        VBox cardTrans = makeResultCard("最少换乘",  "#4488cc", "—");
         HBox.setHgrow(cardTime,  Priority.ALWAYS);
         HBox.setHgrow(cardPrice, Priority.ALWAYS);
         HBox.setHgrow(cardTrans, Priority.ALWAYS);
@@ -522,11 +515,11 @@ public class GUI extends Application {
             String d2 = day2 > 0 ? "  +" + day2 + "天" : "";
             String d3 = day3 > 0 ? "  +" + day3 + "天" : "";
 
-            String transTitle = convenientFromFloyd ? "🔄 最少换乘·F" : "🔄 最少换乘";
+            String transTitle = convenientFromFloyd ? "最少换乘·F" : "最少换乘";
 
-            fillCard(cardTime,  r1, "⏱ 最短耗时", fmtDuration(r1.totalTime) + d1,
+            fillCard(cardTime,  r1, "最短耗时", fmtDuration(r1.totalTime) + d1,
                     "¥" + (int)r1.totalPrice, r1.transfers + "换乘", "#00adb5", stage);
-            fillCard(cardPrice, r2, "💰 最低价格",
+            fillCard(cardPrice, r2, "最低价格",
                     "¥" + (int)r2.totalPrice, fmtDuration(r2.totalTime) + d2, r2.transfers + "换乘", "#e8a400", stage);
             fillCard(cardTrans, r3, transTitle,
                     r3.transfers + "次换乘", fmtDuration(r3.totalTime) + d3, "¥" + (int)r3.totalPrice, "#4488cc", stage);
@@ -535,14 +528,21 @@ public class GUI extends Application {
             FloydValidator.printValidation(Main.From, Main.To);
         });
 
+
+
+
+
         ChatPane chatUI = new ChatPane();
+
+
+
 
         VBox SearchPane = new VBox(10);
         SearchPane.setPadding(new Insets(15, 20, 25, 20));
         SearchPane.setMaxWidth(Double.MAX_VALUE);
         SearchPane.setStyle("-fx-background-color: #f5f5f5;");
 
-        Label searchTitle = new Label("🔍 车次 / 城市检索");
+        Label searchTitle = new Label("车次 / 城市检索");
         searchTitle.setStyle("-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         SearchPane.getChildren().add(searchTitle);
 
@@ -621,6 +621,7 @@ public class GUI extends Application {
             cell.getValue().arrival_time != null ? cell.getValue().arrival_time : ""));
 
         resultTable.getColumns().addAll(rColID, rColFrom, rColTo, rColNum, rColWay, rColPrice, rColTime, rColDep, rColArr);
+        resultTable.getColumns().forEach(c -> c.setPrefWidth(100));
         SearchPane.getChildren().add(resultTable);
 
         // 检索逻辑
@@ -656,7 +657,7 @@ public class GUI extends Application {
         SQLPane.setMaxWidth(Double.MAX_VALUE);
         SQLPane.setStyle("-fx-background-color: #f5f5f5;");
 
-        Label SQLTitle = new Label("🗄 数据库管理");
+        Label SQLTitle = new Label("数据库管理");
         SQLTitle.setStyle("-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         SQLPane.getChildren().add(SQLTitle);
 
@@ -776,6 +777,7 @@ public class GUI extends Application {
                     });
                     sqlTable.getColumns().add(tc);
                 }
+                sqlTable.getColumns().forEach(c -> c.setPrefWidth(85));
 
                 while (rs.next()) {
                     Map<String, Object> row = new LinkedHashMap<>();
@@ -856,21 +858,17 @@ public class GUI extends Application {
                 dialog.showAndWait().ifPresent(btn -> {
                     if (btn != ButtonType.OK) return;
                     try {
-                        StringBuilder cols = new StringBuilder(), vals = new StringBuilder();
+                        List<String> colList = new ArrayList<>();
+                        List<String> valList = new ArrayList<>();
                         for (int i = 0; i < cc; i++) {
                             String val = fields[i].getText().trim();
                             if (val.isEmpty())
                                 continue;
-                            if (cols.length() > 0)
-                            {
-                                cols.append(","); vals.append(",");
-                            }
-                            cols.append(meta.getColumnName(i + 1));
-                            vals.append("'").append(val.replace("'", "''")).append("'");
+                            colList.add(meta.getColumnName(i + 1));
+                            valList.add(val);
                         }
-                        if (cols.length() > 0) {
-                            SQL.con.createStatement().executeUpdate(
-                                "INSERT INTO " + tbl + " (" + cols + ") VALUES (" + vals + ")");
+                        if (!colList.isEmpty()) {
+                            SQL.addLine(tbl, colList.toArray(new String[0]), valList.toArray(new String[0]));
                             loadTable.run();
                         }
                     } catch (Exception ex) {
@@ -906,8 +904,7 @@ public class GUI extends Application {
                 try {
                     String pkCol = sel.keySet().iterator().next();
                     String pkVal = sel.get(pkCol) == null ? "" : sel.get(pkCol).toString();
-                    SQL.con.createStatement().executeUpdate(
-                        "DELETE FROM " + tbl + " WHERE " + pkCol + " = '" + pkVal.replace("'", "''") + "'");
+                    SQL.delLine(tbl, pkCol, pkVal);
                     loadTable.run();
                 } catch (Exception ex) {}
             });
@@ -959,6 +956,7 @@ public class GUI extends Application {
                         });
                         sqlTable.getColumns().add(tc);
                     }
+                    sqlTable.getColumns().forEach(c -> c.setPrefWidth(100));
                     List<Map<String, Object>> rows = new ArrayList<>();
 
                     while (rs.next()) {
@@ -996,7 +994,7 @@ public class GUI extends Application {
         SetPane.setMaxWidth(Double.MAX_VALUE);
         SetPane.setStyle("-fx-background-color: #f5f5f5;");
 
-        Label SetLabel = new Label("⚙ 设置");
+        Label SetLabel = new Label("设置");
         SetLabel.setStyle("-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         SetPane.getChildren().add(SetLabel);
 
@@ -1125,7 +1123,7 @@ public class GUI extends Application {
         dbPwdLbl.setStyle("-fx-font-size: 13; -fx-font-weight: bold;");
         dbGrid.add(dbPwdLbl, 0, 2);
         PasswordField dbPwdField = new PasswordField();
-        dbPwdField.setText("123456");
+        dbPwdField.setPromptText("本地数据库密码");
         dbPwdField.setPrefHeight(35);
         dbPwdField.setStyle("-fx-font-size: 13; -fx-background-radius: 6; -fx-border-radius: 6; " +
             "-fx-border-color: #ddd; -fx-padding: 0 10;");
@@ -1147,10 +1145,10 @@ public class GUI extends Application {
                     "jdbc:mysql://" + dbHostField.getText() + ":" + dbPortField.getText() + "/" + dbNameField.getText(),
                     dbUserField.getText(), dbPwdField.getText());
                 testCon.close();
-                dbStatusLbl.setText("✔ 连接成功");
+                dbStatusLbl.setText("[OK] 连接成功");
                 dbStatusLbl.setStyle("-fx-font-size: 12; -fx-text-fill: #28a745; -fx-font-weight: bold;");
             } catch (Exception ex) {
-                dbStatusLbl.setText("✘ " + ex.getMessage());
+                dbStatusLbl.setText("[ERR] " + ex.getMessage());
                 dbStatusLbl.setStyle("-fx-font-size: 12; -fx-text-fill: #dc3545;");
             }
         });
@@ -1211,6 +1209,7 @@ public class GUI extends Application {
                     new SimpleStringProperty(cell.getValue().role));
 
                 userTable.getColumns().addAll(colID, colUser, colPwd, colRole);
+                userTable.getColumns().forEach(c -> c.setPrefWidth(100));
 
                 List<user> users = new ArrayList<>();
                 ResultSet rs = SQL.con.createStatement().executeQuery("SELECT * FROM user");
@@ -1257,11 +1256,9 @@ public class GUI extends Application {
                     String role = roleField.getText().trim();
                     if (username.isEmpty() || password.isEmpty()) return;
                     if (role.isEmpty()) role = "user";
-                    SQL.con.createStatement().executeUpdate(
-                        "INSERT INTO user (Username, Password, Role) VALUES ('"
-                        + username.replace("'", "''") + "', '"
-                        + password.replace("'", "''") + "', '"
-                        + role.replace("'", "''") + "')");
+                    SQL.addLine("user",
+                        new String[]{"Username", "Password", "Role"},
+                        new String[]{username, password, role});
                     loadUsers.run();
                 } catch (Exception ex) {}
             });
@@ -1276,8 +1273,7 @@ public class GUI extends Application {
             confirm.showAndWait().ifPresent(btn -> {
                 if (btn != ButtonType.OK) return;
                 try {
-                    SQL.con.createStatement().executeUpdate(
-                        "DELETE FROM user WHERE ID = " + sel.id);
+                    SQL.delLine("user", "ID", String.valueOf(sel.id));
                     loadUsers.run();
                 } catch (Exception ex) {}
             });
@@ -1511,7 +1507,9 @@ public class GUI extends Application {
             double dx = wx - toX(c.longitude);
             double dy = wy - toY(c.latitude);
             double d2 = dx * dx + dy * dy;
-            if (d2 < bestD2) { bestD2 = d2; best = c; }
+            if (d2 < bestD2) {
+                bestD2 = d2; best = c;
+            }
         }
         return best;
     }

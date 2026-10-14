@@ -18,8 +18,8 @@ class Schedule {
     private Type type;          // 交通工具类型
     private String fromCity;    // 出发城市
     private String toCity;      // 到达城市
-    private int departureTime;  // 发车时间（分钟，0-1439）。如 06:30 = 390
-    private int arrivalTime;    // 到达时间（分钟，0-1439）。如 11:24 = 684
+    private int departureTime;  // 发车绝对时间（不跨天）
+    private int arrivalTime;    // 到达绝对时间（不跨天）
     private int travelDays;     // 额外运行天数（0=当日达，1=次日达）
     private double cost;        // 票价（元）
 
@@ -56,7 +56,7 @@ class Schedule {
         return base + travelDays * 1440;
     }
 
-    public int getWaitMinutes(int clockTime) {
+    public int getWaitMinutes(int clockTime) {//clockTime上轮列车的到达时间
         if (departureTime >= clockTime) {
             return departureTime - clockTime;
         } else {
@@ -74,6 +74,7 @@ class Schedule {
     }
 
     /** 字符串时间转义为标准时间戳 */
+    //——————————暂废——————————
     public static int parseTime(String timeStr) {
         String[] parts = timeStr.trim().split(":");
         if (parts.length != 2)
@@ -84,7 +85,7 @@ class Schedule {
             throw new IllegalArgumentException("时间超出范围（00:00-23:59）");
         return hours * 60 + minutes;
     }
-
+    //————————————暂废————————————
     //——————————getters & setters——————————
 
     public String getId() { return id; }
@@ -137,10 +138,10 @@ class RouteStep {
     /** 使用的交通班次 */
     private Schedule schedule;
 
-    /** 出发的绝对分钟（从行程起点起算，可能 >= 1440） */
+    /** 出发的绝对分钟（可跨天） */
     private int departureAbsolute;
 
-    /** 到达的绝对分钟 */
+    /** 到达的绝对分钟（可跨天） */
     private int arrivalAbsolute;
 
     /** 出发前在本站的等候分钟数（第一步为 0） */
@@ -162,16 +163,16 @@ class RouteStep {
     /** 到达是第几天 */
     public int getArrivalDay()   { return arrivalAbsolute / 1440; }
 
-    /** 出发的墙钟时刻（0-1439），如 06:30 = 390 */
+    /** 出发的绝对时刻*/
     public int getDepartureClockTime() { return departureAbsolute % 1440; }
 
-    /** 到达的墙钟时刻，如 11:24 = 684 */
+    /** 到达的对决时刻 */
     public int getArrivalClockTime()   { return arrivalAbsolute % 1440; }
 
     /** 本段纯旅行时间（分钟），从 Schedule 获取 */
     public int getTravelMinutes()      { return schedule.getTravelMinutes(); }
 
-    // ===== Getters & Setters =====
+    //————————Getters & Setters————————
 
     public Schedule getSchedule()              { return schedule; }
     public void setSchedule(Schedule schedule) { this.schedule = schedule; }
@@ -308,10 +309,10 @@ DataManager {
         initFromTransport();
     }
 
-    /** 初始化 */
+    /** 全局共享对象 */
     public static DataManager getInstance() { return instance; }
 
-
+    /** 初始化 */
     public void refresh() {
         initFromTransport();
     }
@@ -333,7 +334,7 @@ DataManager {
 
         if (Main.Routes != null) {
             for (Route r : Main.Routes) {
-                Schedule s = convertRoute(r);
+                Schedule s = convertRouteToSchedule(r);
                 if (s.getType() == Schedule.Type.FLIGHT) {
                     flightSchedules.add(s);
                 } else {
@@ -343,7 +344,6 @@ DataManager {
             }
         }
     }
-
 
     /** 获取所有城市名 */
     public Set<String> getCities() { return cities; }
@@ -358,8 +358,8 @@ DataManager {
     public List<Schedule> getFlightSchedules() { return flightSchedules; }
 
     //——————————转换函数——————————
-
-    static Schedule convertRoute(Route r) {
+    //将Main中Route转换为Schedule
+    static Schedule convertRouteToSchedule(Route r) {
         Schedule s = new Schedule();
 
         // ID & 类型
@@ -376,7 +376,7 @@ DataManager {
         // 发车时间（"HH:MM" → int 分钟）
         s.setDepartureTime(parseHHMM(r.departure_time));
 
-        // 到达时间（处理 "+N HH:MM" 格式）
+        // 到达时间（转换为"天数+HH:MM" 格式）
         int[] arr = parseArrivalTime(r.arrival_time);
         s.setArrivalTime(arr[0]);
         s.setTravelDays(arr[1]);
@@ -588,7 +588,7 @@ class RouteFinder {
         }
 
         if (!prev.containsKey(to)) return unreachable();
-        return buildPath(from, to, prev, usedSchedule, dist, arrivalClock, false);
+        return buildPath(from, to, prev, usedSchedule, dist, arrivalClock);
     }
 
     //  策略二：最省钱到达（Dijkstra，费用权重）
@@ -628,7 +628,7 @@ class RouteFinder {
         }
 
         if (!prev.containsKey(to)) return unreachable();
-        return buildPath(from, to, prev, usedSchedule, dist, true);
+        return buildPath(from, to, prev, usedSchedule, dist);
     }
 
     //  策略三：最少换乘（Dijkstra，换乘次数优先 → 总耗时决胜）
@@ -712,14 +712,13 @@ class RouteFinder {
         }
 
         if (!prev.containsKey(to)) return unreachable();
-        return buildPath(from, to, prev, usedSchedule, totalTime, arrivalClock, false);
+        return buildPath(from, to, prev, usedSchedule, totalTime, arrivalClock);
     }
 
     // 路径重建
     private static RouteResult buildPath(String from, String to,
             Map<String, String> prev, Map<String, Schedule> usedSchedule,
-            Map<String, Integer> dist, Map<String, Integer> arrivalClock,
-            boolean distIsCost) {
+            Map<String, Integer> dist, Map<String, Integer> arrivalClock) {
 
         // --- 从终点回溯到起点，构建城市序列 ---
         LinkedList<String> cities = new LinkedList<>();
@@ -765,7 +764,7 @@ class RouteFinder {
 
     private static RouteResult buildPath(String from, String to,
             Map<String, String> prev, Map<String, Schedule> usedSchedule,
-            Map<String, Double> dist, boolean distIsCost) {
+            Map<String, Double> dist) {
 
         // 回溯构建城市序列（同最快路线）
         LinkedList<String> cities = new LinkedList<>();
@@ -1085,7 +1084,7 @@ class FloydValidator {
         RouteResult floyd = query(from, to, strategy);
 
         String label = switch (strategy) {
-            case "cheapest" -> "💰 最省钱"; case "convenient" -> "🔄 最少换乘"; default -> "⏱ 最快到达";
+            case "cheapest" -> "💴 最省钱"; case "convenient" -> "🔄 最少换乘"; default -> "⏱ 最快到达";
         };
 
         StringBuilder rpt = new StringBuilder();
@@ -1119,15 +1118,13 @@ class FloydValidator {
 
             if (strategy.equals("cheapest")) {
                 boolean costOk = Math.abs(floyd.getTotalCost() - dijk.getTotalCost()) < 0.01;
-                rpt.append(costOk ? "√ 费用一致，算法正确\n"
-                                  : "× 费用不一致！偏差=¥"
+                rpt.append(costOk ? "✅ 费用一致，算法正确\n"
+                                  : "❌ 费用不一致！偏差=¥"
                                     + String.format("%.2f", Math.abs(floyd.getTotalCost() - dijk.getTotalCost())) + "\n");
                 rpt.append("   费用偏差 = ¥").append(String.format("%.2f",
                         Math.abs(floyd.getTotalCost() - dijk.getTotalCost()))).append("\n");
 
             } else if (strategy.equals("fastest")) {
-                // Floyd 优化纯旅行时间；Dijkstra 优化旅行+实际等候。
-                // 正确比较：抽取纯旅行时间（不含等候）对比。
                 int floydPure = pureTravelTime(floyd);
                 int dijkPure = pureTravelTime(dijk);
 
@@ -1137,16 +1134,14 @@ class FloydValidator {
                    .append(", Dijkstra=").append(dijk.getFormattedTotalTime()).append("\n");
 
                 if (floydPure <= dijkPure) {
-                    rpt.append("√ Floyd 纯旅行时间 ≤ Dijkstra\n");
+                    rpt.append("✅ Floyd 纯旅行时间 ≤ Dijkstra\n");
                 } else {
-                    rpt.append("× Floyd 纯旅行时间 > Dijkstra（异常）\n");
+                    rpt.append("❌ Floyd 纯旅行时间 > Dijkstra（异常）\n");
                     rpt.append("   纯旅行时间差=").append(floydPure - dijkPure).append("分钟\n");
                     rpt.append("   可能原因：fillEdges 未取到真正最短班次，或数据不一致\n");
                 }
 
             } else { // convenient
-                // Floyd 最小化边数（复合权重 1.0+time/1e6），Dijkstra 最小化边数+总耗时
-                // Floyd 无法建模等候时间，因此同一换乘数下总耗时可能高于 Dijkstra（属正常）
                 int floydPure = pureTravelTime(floyd);
                 int dijkPure = pureTravelTime(dijk);
 
@@ -1158,19 +1153,19 @@ class FloydValidator {
                    .append(", Dijkstra=").append(dijk.getFormattedTotalTime()).append("\n");
 
                 if (fTrans < dTrans) {
-                    rpt.append("√ Floyd 边数更少（Dijkstra 未找到更优中转）\n");
+                    rpt.append("✅ Floyd 边数更少（Dijkstra 未找到更优中转）\n");
                 } else if (fTrans == dTrans) {
-                    rpt.append("√ 最少换乘次数一致（Floyd=验证下界，Dijkstra=实际可行解）\n");
+                    rpt.append("✅ 最少换乘次数一致\n");
                 } else {
-                    rpt.append("⚠ Floyd 边数 > Dijkstra（异常）\n");
+                    rpt.append("⚠️ Floyd 边数 > Dijkstra（异常）\n");
                 }
             }
         } else if (floyd.isReachable() != dijk.isReachable()) {
             rpt.append("------------------------------\n");
             if (strategy.equals("convenient") && !dijk.isReachable()) {
-                rpt.append("√ 正常：Dijkstra 未找到可达路径，而 Floyd 可搜索中转\n");
+                rpt.append("✅ 正常：Dijkstra 未找到可达路径，而 Floyd 可搜索中转\n");
             } else {
-                rpt.append("⚠ Floyd 与 Dijkstra 可达性不一致，请检查\n");
+                rpt.append("⚠️ Floyd 与 Dijkstra 可达性不一致，请检查\n");
             }
         }
 
@@ -1212,7 +1207,7 @@ class FloydValidator {
         for (int i = 0; i < pad; i++) sb.append(' ');
         sb.append("  |\n");
 
-        String route = from + " > " + to;
+        String route = from + " → " + to;
         sb.append("|           ").append(route);
 
         int routec= count(from) + count(to);
